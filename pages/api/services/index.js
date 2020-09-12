@@ -22,7 +22,6 @@ export default async (req, res) => {
 
         res.status(200).json({ services: services, message: "Services fetched sucessfully!" });
       } catch (error) {
-        console.log(error);
         res.status(500).json({ error });
       }
       break;
@@ -66,7 +65,6 @@ export default async (req, res) => {
 
         res.status(201).json({ message: "Service updated sucessfully", service, notification });
       } catch (error) {
-        console.log(error);
         res.status(500).json({ error });
       }
       break;

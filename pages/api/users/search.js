@@ -20,7 +20,6 @@ export default async (req, res) => {
 
         res.status(200).json({ users: users, message: "User fetched sucessfully!" });
       } catch (error) {
-        console.log(error);
         res.status(500).json({ error });
       }
       break;

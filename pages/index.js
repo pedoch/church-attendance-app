@@ -292,7 +292,6 @@ export async function getServerSideProps(context) {
     const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
     services = data.services.length > 0 ? data.services : [];
   } catch (error) {
-    console.log(error);
   } finally {
     return {
       props: {
