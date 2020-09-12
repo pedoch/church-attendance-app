@@ -9,11 +9,7 @@ export default async (req, res) => {
   switch (method) {
     case "GET":
       try {
-        const { search } = query;
-        let filter;
-        if (search) filter = { firstName: search };
-
-        const users = await User.find(filter);
+        const users = await User.find();
 
         res.status(200).json({ users: users, message: "User fetched sucessfully!" });
       } catch (error) {
