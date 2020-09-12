@@ -50,13 +50,13 @@ export default async (req, res) => {
             if (service.attendees.find((att) => String(att) == String(user._id))) {
               notification.push({
                 message: `${user.firstName} ${user.lastName} already present.`,
-                sucess: false,
+                success: false,
               });
             } else {
               service.attendees.push(user._id);
               notification.push({
                 message: `${user.firstName} ${user.lastName} marked present.`,
-                sucess: true,
+                success: true,
               });
             }
           }
