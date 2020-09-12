@@ -7,7 +7,7 @@ import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import * as yup from "yup";
 
-function Home({ services, users }) {
+function Home({ services }) {
   const [markedServices, setMarkedServices] = useState([]);
   const [options, setOptions] = useState([]);
   const [searchId, setSearchId] = useState(null);
@@ -18,21 +18,20 @@ function Home({ services, users }) {
   const [creatingUser, setCreatingUser] = useState(false);
 
   useEffect(() => {
-    console.log(services);
-    console.log(users);
     setMarkedServices(services);
-    setOptions(users);
   }, []);
 
+  const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+
   const userValidationSchema = yup.object().shape({
-    firstName: yup.string().required("Please enter your first name"),
-    lastName: yup.string().required("Please enter your last name"),
-    email: yup.string().email("Please enter a proper email"),
+    firstName: yup.string().required("Please enter your first name."),
+    lastName: yup.string().required("Please enter your last name."),
+    email: yup.string().email("Please enter a proper email."),
     phone: yup
-      .number()
-      .required("Please enter your phone number")
-      .moreThan(9, "Phone number should be 11 digits")
-      .lessThan(12, "Phone number should be 11 digits"),
+      .string()
+      .required("Please enter your phone number.")
+      .matches(phoneRegExp, "Phone number is not valid.")
+      .test("len", "Phone number should be 11 digits.", (val) => val.length === 11),
   });
 
   const { Option } = Select;
@@ -43,13 +42,24 @@ function Home({ services, users }) {
       if (selectedUsers.length < 1) return false;
       const { data } = await axios.post("/services", {
         attendees: selectedUsers,
-        date: dayJS().format("DD-MM-YYYY"),
+        date: dayJS().format("MM-DD-YYYY"),
         type: "First Service",
       });
       setSelectedUsers([]);
-      toaster.success(`${data.message}`);
+      data.notification.forEach((notif) => {
+        if (notif.success) toaster.success(`${notif.message}`);
+        else toaster.warning(`${notif.message}`);
+      });
     } catch (error) {
-      console.log(error);
+      if (!error.response) {
+        toaster.danger("Unable to mark attendance", {
+          description: "May be a network error",
+        });
+      } else if (error.response.status === 500) {
+        toaster.danger("Unable to mark attendance", {
+          description: "May be a problem from our side. We'll investigate",
+        });
+      }
     } finally {
       setMakring(false);
       refetchService();
@@ -57,7 +67,7 @@ function Home({ services, users }) {
   };
 
   const refetchService = async () => {
-    const { data } = await axios.get(`/services?date=${dayJS().format("DD-MM-YYYY")}`);
+    const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
     setMarkedServices(data.services);
   };
 
@@ -82,7 +92,15 @@ function Home({ services, users }) {
       const { data } = await axios.get(`/users/search?search=${value}`);
       setOptions(data.users);
     } catch (error) {
-      console.log(error);
+      if (!error.response) {
+        toaster.danger("Unable to search for users", {
+          description: "May be a network error",
+        });
+      } else if (error.response.status === 500) {
+        toaster.danger("Unable to search for users", {
+          description: "May be a problem from our side. We'll investigate",
+        });
+      }
     } finally {
       setSelectLoading(false);
     }
@@ -93,11 +111,11 @@ function Home({ services, users }) {
         <title>Home</title>
       </Head>
 
-      <div className="h-screen w-screen flex flex-col items-center justify-center px-8">
-        <div className="max-w-lg flex flex-col items-center text-center">
-          <p className="text-3xl font-semibold">Welcome to Church</p>
+      <div className="h-full w-screen flex flex-col items-center px-8 overflow-hidden">
+        <div className="max-w-lg flex flex-col items-center text-center mt-32 smallTablet:mt-8">
+          <p className="text-3xl font-semibold">Welcome to CMGI Garden City</p>
           <p>Please search for you name in the search bar and press enter to mark your attendace</p>
-          <Input.Group className="w-full flex mt-8">
+          <Input.Group className="w-full flex mt-8 phone:flex-col">
             <Select
               mode="multiple"
               size="large"
@@ -146,7 +164,7 @@ function Home({ services, users }) {
         maskClosable={false}
         closable={false}
         footer={null}
-        className="w-full max-w-lg"
+        className=""
         title="Registration"
       >
         <Formik
@@ -160,7 +178,7 @@ function Home({ services, users }) {
           onSubmit={async (values, { resetForm }) => {
             setCreatingUser(true);
             try {
-              const { data } = await axios.post("/api/users", values);
+              const { data } = await axios.post("/users", values);
               toaster.success(`${data.message}`);
               resetForm();
             } catch (error) {
@@ -171,11 +189,6 @@ function Home({ services, users }) {
               } else if (error.response.status === 500) {
                 toaster.danger("Unable to register", {
                   description: "May be a problem from our side. We'll investigate",
-                });
-              } else {
-                console.log(error.response.data);
-                toaster.danger("Unable to register", {
-                  // description: `${error.response.data.errors[0].msg}`,
                 });
               }
             } finally {
@@ -235,7 +248,6 @@ function Home({ services, users }) {
                   <Input
                     className="w-full"
                     placeholder="Enter Phone Number"
-                    type="tel"
                     name="phone"
                     size="large"
                     value={values.phone}
@@ -245,7 +257,13 @@ function Home({ services, users }) {
                     <p className="text-sm text-red-600">{errors.phone}</p>
                   )}
                 </div>
-                <Button type="primary" size="large" className="w-full mb-3" htmlType="submit">
+                <Button
+                  type="primary"
+                  size="large"
+                  className="w-full mb-3"
+                  htmlType="submit"
+                  disabled={creatingUser}
+                >
                   Register
                 </Button>
                 <Button
@@ -255,6 +273,7 @@ function Home({ services, users }) {
                     resetForm();
                     setShowModal(false);
                   }}
+                  disabled={creatingUser}
                 >
                   Cancel
                 </Button>
@@ -268,26 +287,16 @@ function Home({ services, users }) {
 }
 
 export async function getServerSideProps(context) {
-  let data;
-  let res;
   let services = [];
-  let users = [];
   try {
-    res = await axios.get(`/services?date=${dayJS().format("DD-MM-YYYY")}`);
-    data = res.data;
+    const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
     services = data.services.length > 0 ? data.services : [];
-
-    res = await axios.get(`/users`);
-    data = res.data;
-    console.log(data);
-    users = data.users.length > 0 ? data.users : [];
   } catch (error) {
     console.log(error);
   } finally {
     return {
       props: {
         services,
-        users,
       },
     };
   }
