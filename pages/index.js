@@ -304,9 +304,7 @@ export async function getServerSideProps(context) {
     const { data } = await axios.get(
       `https://cmgi-vi-attendance.vercel.app/api/services?date=${dayJS().format("MM-DD-YYYY")}`
     );
-    console.log(data);
     services = data.services.length > 0 ? data.services : [];
-    console.log(services);
   } catch (error) {
   } finally {
     return {
