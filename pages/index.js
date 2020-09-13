@@ -156,6 +156,7 @@ function Home({ services }) {
             return (
               <div className="w-full text-left mt-16">
                 <p className="text-xl font-semibold">{service.name}</p>
+                <p className="text-lg font-medium">{service.type}</p>
                 <ul>
                   {service?.attendees?.map((attendee, index) => (
                     <li>
@@ -300,8 +301,12 @@ function Home({ services }) {
 export async function getServerSideProps(context) {
   let services = [];
   try {
-    const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
+    const { data } = await axios.get(
+      `https://cmgi-vi-attendance.vercel.app/api/services?date=${dayJS().format("MM-DD-YYYY")}`
+    );
+    console.log(data);
     services = data.services.length > 0 ? data.services : [];
+    console.log(services);
   } catch (error) {
   } finally {
     return {
