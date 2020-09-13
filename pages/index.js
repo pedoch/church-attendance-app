@@ -16,6 +16,7 @@ function Home({ services }) {
   const [marking, setMakring] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
+  const [service, setService] = useState("First Service");
 
   useEffect(() => {
     setMarkedServices(services);
@@ -43,7 +44,7 @@ function Home({ services }) {
       const { data } = await axios.post("/services", {
         attendees: selectedUsers,
         date: dayJS().format("MM-DD-YYYY"),
-        type: "First Service",
+        type: service,
       });
       setSelectedUsers([]);
       data.notification.forEach((notif) => {
@@ -135,6 +136,16 @@ function Home({ services }) {
               {marking ? "Marking" : "Mark Present"}
             </Button>
           </Input.Group>
+          <label className="mt-4">Select Service</label>
+          <Select
+            size="large"
+            value={service}
+            onChange={(value) => setService(value)}
+            className="w-full"
+          >
+            <Option value="First Service">First Service</Option>
+            <Option value="Second Service">Second Service</Option>
+          </Select>
           <div className="mt-16">
             <p>New to the platform?</p>
             <Button type="primary" size="large" onClick={() => setShowModal(true)}>
