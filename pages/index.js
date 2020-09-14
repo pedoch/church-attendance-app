@@ -189,8 +189,12 @@ function Home({ services }) {
           validationSchema={userValidationSchema}
           onSubmit={async (values, { resetForm }) => {
             setCreatingUser(true);
+            const form =
+              values.email.length > 0
+                ? values
+                : { firstName: values.firstName, lastName: values.lastName, phone: values.phone };
             try {
-              const { data } = await axios.post("/users", values);
+              const { data } = await axios.post("/users", form);
               toaster.success(`${data.message}`);
               resetForm();
             } catch (error) {
