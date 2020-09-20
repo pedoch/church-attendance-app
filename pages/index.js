@@ -5,6 +5,7 @@ import { toaster } from "evergreen-ui";
 import { Formik } from "formik";
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
+import CsvDownload from "react-json-to-csv";
 import * as yup from "yup";
 
 function Home({ services }) {
@@ -156,7 +157,14 @@ function Home({ services }) {
             return (
               <div className="w-full text-left mt-16">
                 <p className="text-xl font-semibold">{service.name}</p>
-                <p className="text-lg font-medium">{service.type}</p>
+                <div className="w-full flex justify-between">
+                  <p className="text-lg font-medium">{service.type}</p>
+                  <CsvDownload
+                    className="px-2 py-1 border-black border-solid shadow-outline"
+                    data={service.attendees}
+                    filename={`${service.name}_${service.type}.csv`}
+                  />
+                </div>
                 <ul>
                   {service?.attendees?.map((attendee, index) => (
                     <li>
@@ -191,8 +199,13 @@ function Home({ services }) {
             setCreatingUser(true);
             const form =
               values.email.length > 0
-                ? values
-                : { firstName: values.firstName, lastName: values.lastName, phone: values.phone };
+                ? { ...values, service }
+                : {
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    phone: values.phone,
+                    service,
+                  };
             try {
               const { data } = await axios.post("/users", form);
               toaster.success(`${data.message}`);
@@ -201,6 +214,10 @@ function Home({ services }) {
               if (!error.response) {
                 toaster.danger("Unable to register", {
                   description: "May be a network error",
+                });
+              } else if (error.response.status === 400 || error.response.status === 401) {
+                toaster.danger("Unable to register", {
+                  description: error.response.data.message,
                 });
               } else if (error.response.status === 500) {
                 toaster.danger("Unable to register", {
@@ -306,7 +323,7 @@ export async function getServerSideProps(context) {
   let services = [];
   try {
     const { data } = await axios.get(
-      `https://cmgi-vi-attendance.vercel.app/api/services?date=${dayJS().format("MM-DD-YYYY")}`
+      `https://cgmi-vi-attendance.vercel.app/api/services?date=${dayJS().format("MM-DD-YYYY")}`
     );
     services = data.services.length > 0 ? data.services : [];
   } catch (error) {

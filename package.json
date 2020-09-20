@@ -23,6 +23,7 @@
     "next-connect": "^0.9.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
+    "react-json-to-csv": "^1.0.4",
     "yup": "^0.29.3"
   },
   "devDependencies": {

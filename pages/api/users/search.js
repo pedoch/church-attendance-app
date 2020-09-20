@@ -15,6 +15,9 @@ export default async (req, res) => {
 
         const users = await User.aggregate([
           { $project: { name: { $concat: ["$firstName", " ", "$lastName"] } } },
+          {
+            $project: { __v: 0 },
+          },
           { $match: { name: { $regex: search, $options: "i" } } },
         ]);
 
