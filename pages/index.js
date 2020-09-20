@@ -28,7 +28,7 @@ function Home({ services }) {
   const userValidationSchema = yup.object().shape({
     firstName: yup.string().required("Please enter your first name."),
     lastName: yup.string().required("Please enter your last name."),
-    email: yup.string().email("Please enter a proper email."),
+    email: yup.string().required("Please enter your email.").email("Please enter a proper email."),
     phone: yup
       .string()
       .required("Please enter your phone number.")
@@ -209,6 +209,7 @@ function Home({ services }) {
             try {
               const { data } = await axios.post("/users", form);
               toaster.success(`${data.message}`);
+              refetchService();
               resetForm();
             } catch (error) {
               if (!error.response) {
@@ -262,7 +263,7 @@ function Home({ services }) {
                   )}
                 </div>
                 <div className="w-full mb-3">
-                  <label>Email (optional)</label>
+                  <label>Email</label>
                   <Input
                     className="w-full"
                     placeholder="Enter Email"
