@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Select } from "antd";
+import { Button, DatePicker, Input, Modal, Select } from "antd";
 import axios from "axios";
 import dayJS from "dayjs";
 import { toaster } from "evergreen-ui";
@@ -19,6 +19,10 @@ function Home({ services }) {
   const [showModal, setShowModal] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
   const [service, setService] = useState("First Service");
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [queryDate, setQueryDate] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [searchedServices, setSearchedServices] = useState(null);
 
   useEffect(() => {
     setMarkedServices(services);
@@ -68,6 +72,33 @@ function Home({ services }) {
     }
   };
 
+  const searchServices = async () => {
+    setSearching(true);
+    try {
+      if (!queryDate) {
+        setSearching(false);
+        return false;
+      }
+      const { data } = await axios.get(
+        `/services/search?date=${dayJS(queryDate).format("MM-DD-YYYY")}`
+      );
+      setSearchedServices(data.services);
+    } catch (error) {
+      if (!error.response) {
+        toaster.danger("Unable to query services", {
+          description: "May be a network error.",
+        });
+      } else if (error.response.status === 500) {
+        toaster.danger("Unable to query services", {
+          description: "May be a problem from our side. We'll investigate.",
+        });
+      }
+    } finally {
+      setSearching(false);
+      refetchService();
+    }
+  };
+
   const refetchService = async () => {
     const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
     setMarkedServices(data.services);
@@ -107,14 +138,22 @@ function Home({ services }) {
       setSelectLoading(false);
     }
   };
+
+  const setModalFunc = (bool) => {
+    setShowModal(bool);
+  };
+  const setRequestModalFunc = (bool) => {
+    setShowRequestModal(bool);
+  };
   return (
-    <div>
+    <div className="h-screen w-screen">
       <Head>
         <title>CGMI Garden City Attendance</title>
       </Head>
-      <Navbar />
-      <div className="h-full w-screen flex flex-col items-center px-8 overflow-hidden">
+      <Navbar setModalFunc={setModalFunc} setRequestModalFunc={setRequestModalFunc} />
+      <div className="h-full w-screen flex flex-col items-center px-8 pb-8 overflow-x-hidden">
         <div className="max-w-lg flex flex-col items-center text-center mt-32 smallTablet:mt-8">
+          <img src="/images/church-Of-God-Mission-international.png" className="w-auto h-32 mb-4" />
           <p className="text-3xl font-semibold">Welcome to CGMI Garden City</p>
           <p>Please search for you name in the search bar and press enter to mark your attendace</p>
           <Input.Group className="w-full flex mt-8 phone:flex-col">
@@ -130,7 +169,9 @@ function Home({ services }) {
               value={selectedUsers}
             >
               {options.map((user, index) => (
-                <Option value={user._id}>{user.name}</Option>
+                <Option value={user._id} key={user.name + index}>
+                  {user.name}
+                </Option>
               ))}
             </Select>
             <Button type="primary" size="large" disabled={marking} onClick={() => markUser()}>
@@ -147,17 +188,11 @@ function Home({ services }) {
             <Option value="First Service">First Service</Option>
             <Option value="Second Service">Second Service</Option>
           </Select>
-          <div className="mt-16">
-            <p>New to the platform?</p>
-            <Button type="primary" size="large" onClick={() => setShowModal(true)}>
-              Register
-            </Button>
-          </div>
           {markedServices?.map((service, index) => {
             return (
-              <div className="w-full text-left mt-16">
+              <div className="w-full text-left mt-16" key={service.name + index}>
                 <p className="text-xl font-semibold">{service.name}</p>
-                <div className="w-full flex justify-between">
+                <div className="w-full flex justify-between mb-2">
                   <p className="text-lg font-medium">{service.type}</p>
                   <CsvDownload
                     className="px-2 py-1 border-black border-solid shadow-outline"
@@ -165,9 +200,9 @@ function Home({ services }) {
                     filename={`${service.name}_${service.type}.csv`}
                   />
                 </div>
-                <ul>
+                <ul className="ul-list-spread">
                   {service?.attendees?.map((attendee, index) => (
-                    <li>
+                    <li className="mb-3" key={attendee.firstName + index}>
                       {attendee.firstName} {attendee.lastName}
                     </li>
                   ))}
@@ -315,6 +350,55 @@ function Home({ services }) {
             );
           }}
         </Formik>
+      </Modal>
+      <Modal
+        visible={showRequestModal}
+        onCancel={() => setShowRequestModal(false)}
+        centered={true}
+        footer={null}
+        title="Query Services"
+      >
+        <div className="w-full mb-3 max-h-full">
+          <label>Select Service Date</label>
+          <Input.Group className="w-full flex mt-2 phone:flex-col">
+            <DatePicker
+              size="large"
+              className="w-full"
+              onChange={(value) => setQueryDate(value)}
+              value={queryDate}
+            />
+            <Button
+              type="primary"
+              size="large"
+              disabled={searching}
+              onClick={() => searchServices()}
+            >
+              {searching ? "Searching" : "Search"}
+            </Button>
+          </Input.Group>
+          {searchedServices?.map((service, index) => {
+            return (
+              <div className="w-full text-left mt-16 overflow-visible" key={service.name + index}>
+                <p className="text-xl font-semibold">{service.name}</p>
+                <div className="w-full flex justify-between mb-2">
+                  <p className="text-lg font-medium">{service.type}</p>
+                  <CsvDownload
+                    className="px-2 py-1 border-black border-solid shadow-outline"
+                    data={service.attendees}
+                    filename={`${service.name}_${service.type}.csv`}
+                  />
+                </div>
+                <ul className="ul-list-spread">
+                  {service?.attendees?.map((attendee, index) => (
+                    <li className="mb-2" key={attendee.firstName + index}>
+                      {attendee.firstName} {attendee.lastName}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </Modal>
     </div>
   );
