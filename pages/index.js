@@ -23,7 +23,7 @@ function Home({ services }) {
     setMarkedServices(services);
   }, []);
 
-  const phoneRegExp = /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+  const phoneRegExp = /^(\+?\d{0,4})?\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{4}\)?)?$/;
 
   const userValidationSchema = yup.object().shape({
     firstName: yup.string().required("Please enter your first name."),
@@ -32,8 +32,7 @@ function Home({ services }) {
     phone: yup
       .string()
       .required("Please enter your phone number.")
-      .matches(phoneRegExp, "Phone number is not valid.")
-      .test("len", "Phone number should be 11 digits.", (val) => val.length === 11),
+      .matches(phoneRegExp, "Phone number is not valid."),
   });
 
   const { Option } = Select;
