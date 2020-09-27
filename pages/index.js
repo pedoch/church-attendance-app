@@ -7,6 +7,7 @@ import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import CsvDownload from "react-json-to-csv";
 import * as yup from "yup";
+import Navbar from "../components/common/Navbar";
 
 function Home({ services }) {
   const [markedServices, setMarkedServices] = useState([]);
@@ -109,9 +110,9 @@ function Home({ services }) {
   return (
     <div>
       <Head>
-        <title>Home</title>
+        <title>CGMI Garden City Attendance</title>
       </Head>
-
+      <Navbar />
       <div className="h-full w-screen flex flex-col items-center px-8 overflow-hidden">
         <div className="max-w-lg flex flex-col items-center text-center mt-32 smallTablet:mt-8">
           <p className="text-3xl font-semibold">Welcome to CGMI Garden City</p>
