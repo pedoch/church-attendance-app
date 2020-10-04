@@ -3,7 +3,9 @@ import axios from "axios";
 import dayJS from "dayjs";
 import { toaster } from "evergreen-ui";
 import { Formik } from "formik";
+import jsCookie from 'js-cookie';
 import Head from "next/head";
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from "react";
 import CsvDownload from "react-json-to-csv";
 import * as yup from "yup";
@@ -23,9 +25,16 @@ function Home({ services }) {
   const [queryDate, setQueryDate] = useState(null);
   const [searching, setSearching] = useState(false);
   const [searchedServices, setSearchedServices] = useState(null);
+  const [token, setToken] = useState(null);
+
+  const router = useRouter();
 
   useEffect(() => {
-    setMarkedServices(services);
+    setToken(jsCookie.get('token'))
+    if (!token) {
+      router.push('/login');
+    }
+    else setMarkedServices(services);
   }, []);
 
   const phoneRegExp = /^(\+?\d{0,4})?\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{4}\)?)?$/;
@@ -145,7 +154,7 @@ function Home({ services }) {
   const setRequestModalFunc = (bool) => {
     setShowRequestModal(bool);
   };
-  return (
+  return token ? (
     <div className="h-screen w-screen">
       <Head>
         <title>CGMI Garden City Attendance</title>
@@ -401,10 +410,15 @@ function Home({ services }) {
         </div>
       </Modal>
     </div>
+  ) : (
+      <div>
+        <p>You will be redirected shortly</p>
+      </div>
   );
 }
 
 export async function getServerSideProps(context) {
+
   let services = [];
   try {
     const { data } = await axios.get(

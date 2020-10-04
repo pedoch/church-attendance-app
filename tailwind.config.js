@@ -20,4 +20,8 @@ module.exports = {
     borderWidth: ["responsive", "hover", "focus"],
     margin: ["responsive", "hover", "focus"],
   },
+  future: {
+    removeDeprecatedGapUtilities: true,
+    purgeLayersByDefault: true,
+  }
 };

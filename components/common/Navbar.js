@@ -1,7 +1,10 @@
 import { Button } from "antd";
+import jsCookie from 'js-cookie';
 import Link from "next/link";
+import { useRouter } from 'next/router';
 
 function Navbar({ setModalFunc, setRequestModalFunc }) {
+  const router = useRouter();
   return (
     <div className="py-2 px-4 flex justify-between w-full absolute shadow bg-white">
       <Link href="/">
@@ -19,7 +22,10 @@ function Navbar({ setModalFunc, setRequestModalFunc }) {
             Query Service Attendance
           </Button>
         </div>
-        <Button type="primary">Log Out</Button>
+        <Button type="primary" onClick={() => {
+          jsCookie.remove('token');
+          router.push('/login')
+        }}>Log Out</Button>
       </div>
     </div>
   );

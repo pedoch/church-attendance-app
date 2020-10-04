@@ -16,6 +16,16 @@ const AdminSchema = new mongoose.Schema({
     required: [true, "Please enter email."],
     trim: true,
   },
+  type: {
+    type: String,
+    enum: ['Super Admin', 'Admin'],
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['Active', 'Pending'],
+    required: true,
+  },
   password: {
     type: String,
     required: [true, "Please enter password."],
