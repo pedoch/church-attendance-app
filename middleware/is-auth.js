@@ -3,11 +3,9 @@ const jwt = require('jsonwebtoken');
 let jwtSecret = process.env.JWT_SECRET;
 
 module.exports = (req, res, next) => {
-	const authHeader = req.get('Authorization');
+	const authHeader = req.headers.authorization;
 	if (!authHeader) {
-		const error = new Error('Not authenticated');
-		error.statusCode = 401;
-		throw error;
+		return res.status(401).json({ errors: [{ message: "Not Authenticated" }]});
 	}
 
 	const token = authHeader.split(' ')[1];
@@ -20,10 +18,9 @@ module.exports = (req, res, next) => {
 	}
 
 	if (!decodedToken) {
-		const error = new Error('Not authenticated');
-		error.statusCode = 401;
-		throw error;
+		return res.status(401).json({ errors: [{ message: "Not Authenticated" }]});
 	}
 
 	req.userId = decodedToken.userId;
+	return true
 };

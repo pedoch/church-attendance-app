@@ -1,3 +1,4 @@
+import isAuth from '../../../middleware/is-auth';
 import User from "../../../models/User";
 import connectToDatabase from "../../../util/mongodb";
 
@@ -6,7 +7,7 @@ connectToDatabase();
 export default async (req, res) => {
   const { method, query } = req;
 
-  switch (method) {
+  if(isAuth(req, res) === true) switch (method) {
     case "GET":
       try {
         const { search } = query;

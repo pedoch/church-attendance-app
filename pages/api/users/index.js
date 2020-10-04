@@ -1,5 +1,6 @@
 import axios from "axios";
 import dayJS from "dayjs";
+import isAuth from '../../../middleware/is-auth';
 import User from "../../../models/User";
 import connectToDatabase from "../../../util/mongodb";
 
@@ -8,7 +9,7 @@ connectToDatabase();
 export default async (req, res) => {
   const { method, body } = req;
 
-  switch (method) {
+  if(isAuth(req, res) === true) switch (method) {
     case "GET":
       try {
         const users = await User.find();
@@ -47,6 +48,10 @@ export default async (req, res) => {
           attendees: [user._id],
           date: dayJS().format("MM-DD-YYYY"),
           type: body.service,
+        }, {
+            headers: {
+              Authorization: `jwt ${req.headers.authorization}`,
+        },
         });
 
         res.status(201).json({ message: "User created sucessfully", user: user });

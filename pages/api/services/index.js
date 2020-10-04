@@ -1,4 +1,5 @@
 import dayJs from "dayjs";
+import isAuth from '../../../middleware/is-auth';
 import Service from "../../../models/Service";
 import User from "../../../models/User";
 import connectToDatabase from "../../../util/mongodb";
@@ -10,7 +11,7 @@ const dayArray = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
 export default async (req, res) => {
   const { method, body, query } = req;
 
-  switch (method) {
+  if(isAuth(req, res) === true) switch (method) {
     case "GET":
       try {
         const { date, id } = query;

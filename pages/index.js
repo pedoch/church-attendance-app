@@ -11,7 +11,7 @@ import CsvDownload from "react-json-to-csv";
 import * as yup from "yup";
 import Navbar from "../components/common/Navbar";
 
-function Home({ services }) {
+function Home() {
   const [markedServices, setMarkedServices] = useState([]);
   const [options, setOptions] = useState([]);
   const [searchId, setSearchId] = useState(null);
@@ -25,16 +25,26 @@ function Home({ services }) {
   const [queryDate, setQueryDate] = useState(null);
   const [searching, setSearching] = useState(false);
   const [searchedServices, setSearchedServices] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(true);
+  const [searchingServices, setSearchingServices] = useState(false)
 
   const router = useRouter();
 
   useEffect(() => {
-    setToken(jsCookie.get('token'))
-    if (!token) {
+    let tokenCookie = jsCookie.get('token')
+    if (!tokenCookie) {
       router.push('/login');
     }
-    else setMarkedServices(services);
+    else {
+      setToken(tokenCookie)
+      setSearchingServices(true)
+      try {
+        refetchService()
+      } catch (error) {
+      } finally {
+        setSearchingServices(false)
+      }
+    }
   }, []);
 
   const phoneRegExp = /^(\+?\d{0,4})?\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{4}\)?)?$/;
@@ -59,6 +69,10 @@ function Home({ services }) {
         attendees: selectedUsers,
         date: dayJS().format("MM-DD-YYYY"),
         type: service,
+      }, {
+        headers: {
+          Authorization: `jwt ${token}`,
+        },
       });
       setSelectedUsers([]);
       data.notification.forEach((notif) => {
@@ -90,7 +104,11 @@ function Home({ services }) {
       }
       const { data } = await axios.get(
         `/services/search?date=${dayJS(queryDate).format("MM-DD-YYYY")}`
-      );
+      ,{
+        headers: {
+          Authorization: `jwt ${token}`,
+        },
+      });
       setSearchedServices(data.services);
     } catch (error) {
       if (!error.response) {
@@ -109,7 +127,11 @@ function Home({ services }) {
   };
 
   const refetchService = async () => {
-    const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`);
+    const { data } = await axios.get(`/services?date=${dayJS().format("MM-DD-YYYY")}`,{
+        headers: {
+          Authorization: `jwt ${jsCookie.get('token')}`,
+        },
+      });
     setMarkedServices(data.services);
   };
 
@@ -131,7 +153,11 @@ function Home({ services }) {
   const fetchUsers = async (value) => {
     try {
       setSelectLoading(true);
-      const { data } = await axios.get(`/users/search?search=${value}`);
+      const { data } = await axios.get(`/users/search?search=${value}`,{
+        headers: {
+          Authorization: `jwt ${token}`,
+        },
+      });
       setOptions(data.users);
     } catch (error) {
       if (!error.response) {
@@ -197,7 +223,7 @@ function Home({ services }) {
             <Option value="First Service">First Service</Option>
             <Option value="Second Service">Second Service</Option>
           </Select>
-          {markedServices?.map((service, index) => {
+          {!searchingServices ? markedServices?.map((service, index) => {
             return (
               <div className="w-full text-left mt-16" key={service.name + index}>
                 <p className="text-xl font-semibold">{service.name}</p>
@@ -218,7 +244,7 @@ function Home({ services }) {
                 </ul>
               </div>
             );
-          })}
+          }) : <p>Fecthing Services</p>}
         </div>
       </div>
       <Modal
@@ -251,7 +277,11 @@ function Home({ services }) {
                     service,
                   };
             try {
-              const { data } = await axios.post("/users", form);
+              const { data } = await axios.post("/users", form, {
+        headers: {
+          Authorization: `jwt ${token}`,
+        },
+      });
               toaster.success(`${data.message}`);
               refetchService();
               resetForm();
@@ -415,24 +445,6 @@ function Home({ services }) {
         <p>You will be redirected shortly</p>
       </div>
   );
-}
-
-export async function getServerSideProps(context) {
-
-  let services = [];
-  try {
-    const { data } = await axios.get(
-      `https://cgmi-vi-attendance.vercel.app/api/services?date=${dayJS().format("MM-DD-YYYY")}`
-    );
-    services = data.services.length > 0 ? data.services : [];
-  } catch (error) {
-  } finally {
-    return {
-      props: {
-        services,
-      },
-    };
-  }
 }
 
 export default Home;

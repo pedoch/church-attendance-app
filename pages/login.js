@@ -45,7 +45,7 @@ function LogIn(){
           });
         } else {
           toaster.danger('Login failed', {
-            description: `${error.response.data.errors[0].msg}`,
+            description: `${error.response.data.errors[0].message}`,
           });
         }
 
@@ -86,7 +86,7 @@ function LogIn(){
           });
         } else {
           toaster.danger('Sign Up failed', {
-            description: `${error.response.data.errors[0].msg}`,
+            description: `${error.response.data.errors[0].message}`,
           });
         }
 
